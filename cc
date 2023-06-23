@@ -8,7 +8,7 @@ class TrieNode {
 public:
     unordered_map<char, TrieNode*> children;
 };
-
+//shi
 class SuffixTrie {
 public:
     TrieNode* root;
