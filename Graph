@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { Play, Pause, RotateCcw } from 'lucide-react';
 
+
+
 const yearData = {
   1939: {
     "Republic of China": 100000,
