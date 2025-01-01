@@ -1,0 +1,142 @@
+import React, { useState, useEffect } from 'react';
+import { Play, Pause, RotateCcw } from 'lucide-react';
+
+const yearData = {
+  1939: {
+    "Republic of China": 100000,
+    "Poland": 200000,
+    "Soviet Union": 0,
+    "Germany": 20000,
+    "British Raj": 0,
+    "Japan": 50000,
+    // Add other countries with initial values
+  },
+  1941: {
+    "Republic of China": 2000000,
+    "Poland": 1500000,
+    "Soviet Union": 800000,
+    "Germany": 100000,
+    "British Raj": 50000,
+    "Japan": 200000,
+    // Add other countries with mid-war values
+  },
+  1945: {
+    "Republic of China": 4006511,
+    "Poland": 1961823,
+    "Japan": 465505,
+    "Soviet Union": 267160,
+    "Germany": 190112,
+    "British Raj": 150407,
+    // Final values as shown in the image
+  }
+};
+
+const CountryBar = ({ country, value, maxValue, flag }) => {
+  const width = `${(value / maxValue) * 100}%`;
+  
+  return (
+    <div className="flex items-center mb-4">
+      <div className="w-32 text-right pr-4">{country}</div>
+      <div className="flex-1 relative h-8">
+        <div 
+          className="absolute h-full bg-red-600 transition-all duration-1000 ease-in-out rounded-r-full"
+          style={{ width }}
+        >
+          <div className="absolute -left-4 top-1/2 -translate-y-1/2 w-8 h-8 rounded-full bg-white border-2 border-gray-300 flex items-center justify-center">
+            {flag}
+          </div>
+        </div>
+        <div className="absolute left-full ml-2">
+          {value.toLocaleString()}
+        </div>
+      </div>
+    </div>
+  );
+};
+
+const WW2CasualtiesAnimation = () => {
+  const [year, setYear] = useState(1939);
+  const [isPlaying, setIsPlaying] = useState(false);
+  const maxValue = 4500000; // Slightly larger than China's final value
+
+  useEffect(() => {
+    let interval;
+    if (isPlaying) {
+      interval = setInterval(() => {
+        setYear(prevYear => {
+          if (prevYear >= 1945) {
+            setIsPlaying(false);
+            return 1945;
+          }
+          return prevYear + 1;
+        });
+      }, 1000);
+    }
+    return () => clearInterval(interval);
+  }, [isPlaying]);
+
+  const reset = () => {
+    setYear(1939);
+    setIsPlaying(false);
+  };
+
+  const getCurrentData = () => {
+    const yearKeys = Object.keys(yearData).map(Number).sort((a, b) => a - b);
+    const prevYear = yearKeys.filter(y => y <= year).pop();
+    const nextYear = yearKeys.filter(y => y > year)[0];
+    
+    if (!nextYear) return yearData[prevYear];
+    
+    const progress = (year - prevYear) / (nextYear - prevYear);
+    const result = {};
+    
+    Object.keys(yearData[prevYear]).forEach(country => {
+      const start = yearData[prevYear][country];
+      const end = yearData[nextYear][country];
+      result[country] = Math.round(start + (end - start) * progress);
+    });
+    
+    return result;
+  };
+
+  return (
+    <div className="p-8 max-w-4xl mx-auto bg-white rounded-lg shadow-lg">
+      <div className="mb-8">
+        <h1 className="text-3xl font-bold mb-4">WWII Human Losses</h1>
+        <div className="flex items-center gap-4 mb-4">
+          <button
+            onClick={() => setIsPlaying(!isPlaying)}
+            className="p-2 rounded-full hover:bg-gray-100"
+          >
+            {isPlaying ? <Pause size={24} /> : <Play size={24} />}
+          </button>
+          <button
+            onClick={reset}
+            className="p-2 rounded-full hover:bg-gray-100"
+          >
+            <RotateCcw size={24} />
+          </button>
+          <div className="text-xl font-semibold">
+            {year}
+          </div>
+        </div>
+      </div>
+
+      <div className="space-y-2">
+        {Object.entries(getCurrentData())
+          .sort(([, a], [, b]) => b - a)
+          .map(([country, value]) => (
+            <CountryBar
+              key={country}
+              country={country}
+              value={value}
+              maxValue={maxValue}
+              flag="🏳️" // Replace with actual flag emojis or SVGs
+            />
+          ))}
+      </div>
+    </div>
+  );
+};
+
+export default WW2CasualtiesAnimation;
